@@ -6,6 +6,7 @@
 > [Latest frachi build (nightly.link)](https://nightly.link/cryptexctl/frachi/workflows/build/main?preview)
 
 ![screenshot](img/screen.png)
+![screenshot2](img/screen2.png)
 
 ## What is frachi?
 frachi (Fuck RACHInstall) is a Go-based CLI installer for Arch Linux, designed for advanced users who want:
