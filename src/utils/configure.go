@@ -93,3 +93,14 @@ func archChroot(root string, args ...string) {
 	cmd.Stderr = os.Stderr
 	cmd.Run()
 }
+
+func InstallYay(username string) {
+	fmt.Println("Installing yay AUR helper...")
+	archChroot("/mnt", "pacman", "-S", "--noconfirm", "base-devel", "git")
+	archChroot("/mnt", "bash", "-c", "cd /tmp && git clone https://aur.archlinux.org/yay.git")
+	if username != "" {
+		archChroot("/mnt", "bash", "-c", "cd /tmp/yay && sudo -u "+username+" makepkg -si --noconfirm")
+	} else {
+		archChroot("/mnt", "bash", "-c", "cd /tmp/yay && makepkg -si --noconfirm")
+	}
+}
