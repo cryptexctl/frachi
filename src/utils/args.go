@@ -12,7 +12,7 @@ type multiFlag []string
 func (m *multiFlag) String() string       { return strings.Join(*m, ",") }
 func (m *multiFlag) Set(val string) error { *m = append(*m, val); return nil }
 
-func ParseArgs() (InstallConfig, []UserSpec, []string, []string, bool, bool, bool, bool) {
+func ParseArgs() (InstallConfig, []UserSpec, []string, []string, bool, bool, bool, bool, bool) {
 	disk := flag.String("disk", "", "Target disk (e.g. /dev/sda)")
 	efi := flag.String("efi", "", "EFI partition (e.g. /dev/sda1)")
 	root := flag.String("root", "", "Root partition (e.g. /dev/sda2)")
@@ -30,6 +30,7 @@ func ParseArgs() (InstallConfig, []UserSpec, []string, []string, bool, bool, boo
 	var useDoas bool
 	var afterBase bool
 	var addYay bool
+	var useNetworkManager bool
 	flag.Var(&users, "user", "User in format user:pass (can be repeated)")
 	flag.Var(&addSudo, "addsudo", "Add user to sudoers (can be repeated)")
 	flag.Var(&addDoas, "adddoas", "Add user to doas.conf (can be repeated)")
@@ -37,6 +38,7 @@ func ParseArgs() (InstallConfig, []UserSpec, []string, []string, bool, bool, boo
 	flag.BoolVar(&useDoas, "doas", false, "Install and configure doas")
 	flag.BoolVar(&afterBase, "afterbase", false, "Skip base install and drivers (for re-config)")
 	flag.BoolVar(&addYay, "addyay", false, "Install yay AUR helper after setup")
+	flag.BoolVar(&useNetworkManager, "networkmanager", false, "Install and enable NetworkManager")
 	flag.Parse()
 
 	if *disk == "" || *password == "" {
@@ -62,5 +64,5 @@ func ParseArgs() (InstallConfig, []UserSpec, []string, []string, bool, bool, boo
 			userSpecs = append(userSpecs, UserSpec{Name: parts[0], Pass: parts[1]})
 		}
 	}
-	return cfg, userSpecs, addSudo, addDoas, useSudo, useDoas, afterBase, addYay
+	return cfg, userSpecs, addSudo, addDoas, useSudo, useDoas, afterBase, addYay, useNetworkManager
 }

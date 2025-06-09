@@ -19,7 +19,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cfg, users, addSudo, addDoas, useSudo, useDoas, afterBase, addYay := utils.ParseArgs()
+	cfg, users, addSudo, addDoas, useSudo, useDoas, afterBase, addYay, useNetworkManager := utils.ParseArgs()
 	utils.ConfirmConfig(cfg)
 
 	parts, err := utils.ParsePartitions(cfg.Disk)
@@ -90,7 +90,7 @@ func main() {
 		utils.InstallBase()
 		utils.DetectAndInstallDrivers()
 	}
-	utils.ConfigureSystemExt(cfg, users, addSudo, addDoas, useSudo, useDoas)
+	utils.ConfigureSystemExt(cfg, users, addSudo, addDoas, useSudo, useDoas, useNetworkManager)
 	utils.InstallBootloader(sel.Root.Name)
 	if addYay {
 		username := ""

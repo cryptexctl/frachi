@@ -25,7 +25,7 @@ type UserSpec struct {
 	Pass string
 }
 
-func ConfigureSystemExt(cfg InstallConfig, users []UserSpec, addSudo, addDoas []string, useSudo, useDoas bool) {
+func ConfigureSystemExt(cfg InstallConfig, users []UserSpec, addSudo, addDoas []string, useSudo, useDoas, useNetworkManager bool) {
 	fmt.Println("Configuring system...")
 
 	copyResolvConf()
@@ -43,6 +43,15 @@ func ConfigureSystemExt(cfg InstallConfig, users []UserSpec, addSudo, addDoas []
 	archChroot("/mnt", "locale-gen")
 	archChroot("/mnt", "bash", "-c", "echo LANG="+cfg.Locale+">/etc/locale.conf")
 	archChroot("/mnt", "bash", "-c", "echo "+cfg.Hostname+">/etc/hostname")
+
+	// fuck your systemd-{resolved,networkd}. connman is better.
+	archChroot("/mnt", "systemctl", "enable", "systemd-networkd")
+	archChroot("/mnt", "systemctl", "enable", "systemd-resolved")
+
+	if useNetworkManager {
+		archChroot("/mnt", "pacman", "-S", "--noconfirm", "networkmanager")
+		archChroot("/mnt", "systemctl", "enable", "NetworkManager")
+	}
 
 	archChroot("/mnt", "bash", "-c", "echo 'root:"+cfg.Password+"' | chpasswd")
 
