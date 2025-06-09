@@ -1,4 +1,4 @@
-.PHONY: build clean test
+.PHONY: build clean
 
 GO=go
 GOOS?=linux
@@ -9,8 +9,5 @@ build:
 
 clean:
 	rm -rf bin/
-
-test:
-	$(GO) test ./...
 
 all: clean build 

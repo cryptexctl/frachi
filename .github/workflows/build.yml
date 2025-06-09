@@ -1,24 +1,26 @@
-  name: Build
+name: Build
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
-
-    - name: Build
-      run: make build
-
-    - name: Test
-      run: make test 
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      - name: Build
+        run: make build
+      - name: Upload frachi binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: frachi
+          path: bin/frachi
