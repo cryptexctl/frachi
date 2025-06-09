@@ -3,7 +3,7 @@
 **Fuck RACHInstall** — minimalistic, fast, and transparent Arch Linux installer written in Go. This is a modern, scriptable, and hackable alternative to archinstall, focused on clarity, full control, and real-time feedback.
 
 > **Download prebuilt binary:**
-> [Latest frachi build (nightly.link)](https://nightly.link/cryptexctl/frachi/actions/workflows/build.yml/main/frachi.zip)
+> [Latest frachi build (nightly.link)](https://nightly.link/cryptexctl/frachi/workflows/build/main?preview)
 
 ![screenshot](img/screen.png)
 
