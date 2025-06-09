@@ -34,11 +34,26 @@ func main() {
 	cfg := parseArgs()
 	confirmConfig(cfg)
 
-	utils.MountDisk(cfg.Disk)
+	parts, err := utils.ParsePartitions(cfg.Disk)
+	if err != nil || len(parts) < 2 {
+		fmt.Println("Failed to parse partitions or not enough partitions on disk.")
+		os.Exit(1)
+	}
+	fmt.Println("Partitions detected:")
+	for _, p := range parts {
+		fmt.Printf("%s	%dMB	%s	%s\n", p.Name, p.SizeMB, p.FSType, p.Mount)
+	}
+	efi, root := utils.SelectPartitions(parts)
+	fmt.Printf("EFI candidate: %s (%dMB)\n", efi.Name, efi.SizeMB)
+	fmt.Printf("Root candidate: %s (%dMB)\n", root.Name, root.SizeMB)
+	utils.ConfirmAndFormat(efi, "vfat")
+	utils.ConfirmAndFormat(root, "ext4")
+	utils.MountDiskWithEfi(root, efi)
+
 	utils.InstallBase()
 	utils.DetectAndInstallDrivers()
 	utils.ConfigureSystem(cfg)
-	utils.InstallBootloader(cfg.Disk)
+	utils.InstallBootloader(root.Name)
 	finalMessage(cfg)
 }
 
