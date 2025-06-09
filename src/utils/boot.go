@@ -9,7 +9,7 @@ import (
 
 func InstallBootloader(disk string) {
 	fmt.Println("Installing bootloader...")
-	archChrootLog("/mnt", "pacman", "-S", "--noconfirm", "grub")
+	archChrootLog("/mnt", "pacman", "-S", "--noconfirm", "grub", "efibootmgr")
 	if isUEFI() {
 		fmt.Println("Detected UEFI system. Installing grub-efi...")
 		archChrootLog("/mnt", "grub-install", "--target=x86_64-efi", "--efi-directory=/boot/efi", "--bootloader-id=GRUB")
