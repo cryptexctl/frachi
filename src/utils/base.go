@@ -8,7 +8,7 @@ import (
 
 func InstallBase() {
 	fmt.Println("Installing base system...")
-	cmd := exec.Command("pacstrap", "/mnt", "base", "linux", "linux-firmware")
+	cmd := exec.Command("pacstrap", "/mnt", "base", "linux", "linux-firmware", "ca-certificates")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {

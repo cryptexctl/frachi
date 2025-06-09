@@ -76,24 +76,6 @@ func hasDigit(s string) bool {
 	return false
 }
 
-func SelectPartitions(parts []Partition) PartitionSelection {
-	var efi *Partition
-	var root *Partition
-	var swap *Partition
-	for i, p := range parts {
-		if p.FSType == "vfat" && p.SizeMB < 5120 && (efi == nil || p.SizeMB < efi.SizeMB) {
-			efi = &parts[i]
-		}
-		if p.FSType == "ext4" && (root == nil || p.SizeMB > root.SizeMB) {
-			root = &parts[i]
-		}
-		if p.FSType == "swap" {
-			swap = &parts[i]
-		}
-	}
-	return PartitionSelection{EFI: efi, Root: root, Swap: swap}
-}
-
 func ConfirmAndFormat(part *Partition, fstype string) {
 	if part == nil {
 		return

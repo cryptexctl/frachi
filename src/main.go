@@ -21,7 +21,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cfg := parseArgs()
+	cfg, users, addSudo, addDoas, useSudo, useDoas, afterBase := parseArgs()
 	confirmConfig(cfg)
 
 	parts, err := utils.ParsePartitions(cfg.Disk)
@@ -88,9 +88,11 @@ func main() {
 	sel := utils.PartitionSelection{EFI: efi, Root: root, Swap: swap}
 	utils.MountDiskWithEfiAndSwap(sel)
 
-	utils.InstallBase()
-	utils.DetectAndInstallDrivers()
-	utils.ConfigureSystem(cfg)
+	if !afterBase {
+		utils.InstallBase()
+		utils.DetectAndInstallDrivers()
+	}
+	utils.ConfigureSystemExt(cfg, users, addSudo, addDoas, useSudo, useDoas)
 	utils.InstallBootloader(sel.Root.Name)
 	finalMessage(cfg)
 }
@@ -124,17 +126,29 @@ func readDevice(reader *bufio.Reader, parts []utils.Partition) string {
 	}
 }
 
-func parseArgs() utils.InstallConfig {
+func parseArgs() (utils.InstallConfig, []utils.UserSpec, []string, []string, bool, bool, bool) {
 	disk := flag.String("disk", "", "Target disk (e.g. /dev/sda)")
 	efi := flag.String("efi", "", "EFI partition (e.g. /dev/sda1)")
 	root := flag.String("root", "", "Root partition (e.g. /dev/sda2)")
 	swap := flag.String("swap", "", "Swap partition (e.g. /dev/sda3)")
 	hostname := flag.String("hostname", "archlinux", "Hostname")
-	username := flag.String("username", "user", "Username")
 	password := flag.String("password", "", "Password")
 	locale := flag.String("locale", "en_US.UTF-8", "Locale")
 	timezone := flag.String("timezone", "UTC", "Timezone")
 	bootloader := flag.String("bootloader", "grub", "Bootloader (grub)")
+
+	var users multiFlag
+	var addSudo multiFlag
+	var addDoas multiFlag
+	var useSudo bool
+	var useDoas bool
+	var afterBase bool
+	flag.Var(&users, "user", "User in format user:pass (can be repeated)")
+	flag.Var(&addSudo, "addsudo", "Add user to sudoers (can be repeated)")
+	flag.Var(&addDoas, "adddoas", "Add user to doas.conf (can be repeated)")
+	flag.BoolVar(&useSudo, "sudo", false, "Install and configure sudo")
+	flag.BoolVar(&useDoas, "doas", false, "Install and configure doas")
+	flag.BoolVar(&afterBase, "afterbase", false, "Skip base install and drivers (for re-config)")
 	flag.Parse()
 
 	if *disk == "" || *password == "" {
@@ -142,23 +156,35 @@ func parseArgs() utils.InstallConfig {
 		os.Exit(1)
 	}
 
-	return utils.InstallConfig{
+	cfg := utils.InstallConfig{
 		Disk:       *disk,
 		EFI:        *efi,
 		Root:       *root,
 		Swap:       *swap,
 		Hostname:   *hostname,
-		Username:   *username,
 		Password:   *password,
 		Locale:     *locale,
 		Timezone:   *timezone,
 		Bootloader: *bootloader,
 	}
+	var userSpecs []utils.UserSpec
+	for _, u := range users {
+		parts := strings.SplitN(u, ":", 2)
+		if len(parts) == 2 {
+			userSpecs = append(userSpecs, utils.UserSpec{Name: parts[0], Pass: parts[1]})
+		}
+	}
+	return cfg, userSpecs, addSudo, addDoas, useSudo, useDoas, afterBase
 }
+
+type multiFlag []string
+
+func (m *multiFlag) String() string       { return strings.Join(*m, ",") }
+func (m *multiFlag) Set(val string) error { *m = append(*m, val); return nil }
 
 func confirmConfig(cfg utils.InstallConfig) {
 	fmt.Println("Installation config:")
-	fmt.Printf("Disk: %s\nHostname: %s\nUsername: %s\nLocale: %s\nTimezone: %s\nBootloader: %s\n", cfg.Disk, cfg.Hostname, cfg.Username, cfg.Locale, cfg.Timezone, cfg.Bootloader)
+	fmt.Printf("Disk: %s\nHostname: %s\nLocale: %s\nTimezone: %s\nBootloader: %s\n", cfg.Disk, cfg.Hostname, cfg.Locale, cfg.Timezone, cfg.Bootloader)
 	fmt.Print("Continue? (y/N): ")
 	var resp string
 	fmt.Scanln(&resp)
