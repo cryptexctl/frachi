@@ -10,19 +10,6 @@ import (
 	"frachi/src/utils"
 )
 
-type InstallConfig struct {
-	Disk       string
-	EFI        string
-	Root       string
-	Swap       string
-	Hostname   string
-	Username   string
-	Password   string
-	Locale     string
-	Timezone   string
-	Bootloader string
-}
-
 func main() {
 	if os.Geteuid() != 0 {
 		fmt.Println("Root privileges required")
@@ -137,7 +124,7 @@ func readDevice(reader *bufio.Reader, parts []utils.Partition) string {
 	}
 }
 
-func parseArgs() InstallConfig {
+func parseArgs() utils.InstallConfig {
 	disk := flag.String("disk", "", "Target disk (e.g. /dev/sda)")
 	efi := flag.String("efi", "", "EFI partition (e.g. /dev/sda1)")
 	root := flag.String("root", "", "Root partition (e.g. /dev/sda2)")
@@ -155,7 +142,7 @@ func parseArgs() InstallConfig {
 		os.Exit(1)
 	}
 
-	return InstallConfig{
+	return utils.InstallConfig{
 		Disk:       *disk,
 		EFI:        *efi,
 		Root:       *root,
@@ -169,7 +156,7 @@ func parseArgs() InstallConfig {
 	}
 }
 
-func confirmConfig(cfg InstallConfig) {
+func confirmConfig(cfg utils.InstallConfig) {
 	fmt.Println("Installation config:")
 	fmt.Printf("Disk: %s\nHostname: %s\nUsername: %s\nLocale: %s\nTimezone: %s\nBootloader: %s\n", cfg.Disk, cfg.Hostname, cfg.Username, cfg.Locale, cfg.Timezone, cfg.Bootloader)
 	fmt.Print("Continue? (y/N): ")
@@ -197,6 +184,6 @@ func isArchLinux() bool {
 	return false
 }
 
-func finalMessage(cfg InstallConfig) {
+func finalMessage(cfg utils.InstallConfig) {
 	fmt.Println("Installation complete! You can reboot now.")
 }
