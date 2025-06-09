@@ -61,6 +61,7 @@ frachi (Fuck RACHInstall) is a Go-based CLI installer for Arch Linux, designed f
 - **No internet in chroot**: frachi copies `/etc/resolv.conf` automatically, but if you still have no DNS, check `/mnt/etc/resolv.conf`.
 - **SSL/certificate errors**: frachi runs `update-ca-trust` in chroot, but if you see SSL errors, try running it manually in chroot.
 - **pacstrap or chroot errors**: Check the logs in your terminal for details. Most issues are due to missing partitions, wrong formats, or missing network.
+- **UEFI grub-install error: efibootmgr: not found**: For UEFI systems, you must install `efibootmgr` (`pacman -S efibootmgr` in chroot) before running grub-install.
 - **Want to reconfigure without reinstalling base?**: Use `--afterbase` to skip base install and only reconfigure users, bootloader, etc.
 - **Any other issues**: Please open an issue on GitHub with your terminal output and a description. The developer has no problems, so if you do — report it!
 
