@@ -2,17 +2,22 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
+
+	"frachi/src/utils"
 )
 
-type SystemInfo struct {
-	CPU  string
-	GPU  string
-	RAM  string
-	Disk string
+type InstallConfig struct {
+	Disk       string
+	Hostname   string
+	Username   string
+	Password   string
+	Locale     string
+	Timezone   string
+	Bootloader string
 }
 
 func main() {
@@ -26,10 +31,53 @@ func main() {
 		os.Exit(1)
 	}
 
-	sysInfo := detectHardware()
-	installBase()
-	installDrivers(sysInfo)
-	configureSystem()
+	cfg := parseArgs()
+	confirmConfig(cfg)
+
+	utils.MountDisk(cfg.Disk)
+	utils.InstallBase()
+	utils.DetectAndInstallDrivers()
+	utils.ConfigureSystem(cfg)
+	utils.InstallBootloader(cfg.Disk)
+	finalMessage(cfg)
+}
+
+func parseArgs() InstallConfig {
+	disk := flag.String("disk", "", "Target disk (e.g. /dev/sda)")
+	hostname := flag.String("hostname", "archlinux", "Hostname")
+	username := flag.String("username", "user", "Username")
+	password := flag.String("password", "", "Password")
+	locale := flag.String("locale", "en_US.UTF-8", "Locale")
+	timezone := flag.String("timezone", "UTC", "Timezone")
+	bootloader := flag.String("bootloader", "grub", "Bootloader (grub)")
+	flag.Parse()
+
+	if *disk == "" || *password == "" {
+		fmt.Println("--disk and --password are required")
+		os.Exit(1)
+	}
+
+	return InstallConfig{
+		Disk:       *disk,
+		Hostname:   *hostname,
+		Username:   *username,
+		Password:   *password,
+		Locale:     *locale,
+		Timezone:   *timezone,
+		Bootloader: *bootloader,
+	}
+}
+
+func confirmConfig(cfg InstallConfig) {
+	fmt.Println("Installation config:")
+	fmt.Printf("Disk: %s\nHostname: %s\nUsername: %s\nLocale: %s\nTimezone: %s\nBootloader: %s\n", cfg.Disk, cfg.Hostname, cfg.Username, cfg.Locale, cfg.Timezone, cfg.Bootloader)
+	fmt.Print("Continue? (y/N): ")
+	var resp string
+	fmt.Scanln(&resp)
+	if strings.ToLower(resp) != "y" {
+		fmt.Println("Aborted.")
+		os.Exit(0)
+	}
 }
 
 func isArchLinux() bool {
@@ -48,71 +96,6 @@ func isArchLinux() bool {
 	return false
 }
 
-func detectHardware() SystemInfo {
-	var info SystemInfo
-
-	// CPU detection
-	cpuCmd := exec.Command("lscpu")
-	cpuOut, _ := cpuCmd.Output()
-	scanner := bufio.NewScanner(strings.NewReader(string(cpuOut)))
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), "Model name") {
-			info.CPU = strings.Split(scanner.Text(), ":")[1]
-			break
-		}
-	}
-
-	// GPU detection
-	gpuCmd := exec.Command("lspci")
-	gpuOut, _ := gpuCmd.Output()
-	scanner = bufio.NewScanner(strings.NewReader(string(gpuOut)))
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, "VGA") || strings.Contains(line, "3D") {
-			info.GPU = line
-			break
-		}
-	}
-
-	// RAM detection
-	memCmd := exec.Command("free", "-h")
-	memOut, _ := memCmd.Output()
-	scanner = bufio.NewScanner(strings.NewReader(string(memOut)))
-	scanner.Scan() // Skip header
-	scanner.Scan() // Get Mem line
-	info.RAM = strings.Fields(scanner.Text())[1]
-
-	// Disk detection
-	diskCmd := exec.Command("lsblk", "-d", "-o", "SIZE,MODEL")
-	diskOut, _ := diskCmd.Output()
-	info.Disk = string(diskOut)
-
-	return info
-}
-
-func installBase() {
-	cmd := exec.Command("pacstrap", "/mnt", "base", "linux", "linux-firmware")
-	cmd.Run()
-}
-
-func installDrivers(sysInfo SystemInfo) {
-	var drivers []string
-
-	if strings.Contains(strings.ToLower(sysInfo.GPU), "nvidia") {
-		drivers = append(drivers, "nvidia")
-	} else if strings.Contains(strings.ToLower(sysInfo.GPU), "amd") {
-		drivers = append(drivers, "xf86-video-amdgpu")
-	} else if strings.Contains(strings.ToLower(sysInfo.GPU), "intel") {
-		drivers = append(drivers, "xf86-video-intel")
-	}
-
-	if len(drivers) > 0 {
-		cmd := exec.Command("pacstrap", append([]string{"/mnt"}, drivers...)...)
-		cmd.Run()
-	}
-}
-
-func configureSystem() {
-	cmd := exec.Command("genfstab", "-U", "/mnt", ">>", "/mnt/etc/fstab")
-	cmd.Run()
+func finalMessage(cfg InstallConfig) {
+	fmt.Println("Installation complete! You can reboot now.")
 }
