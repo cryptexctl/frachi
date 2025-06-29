@@ -45,7 +45,6 @@ frachi (Fuck RACHInstall) is a Go-based CLI installer for Arch Linux, designed f
 
    If you don't specify partitions, frachi will prompt you to enter device paths interactively.
 
-   **Or just download the latest binary from [nightly.link](https://nightly.link/cryptexctl/frachi/workflows/build/main?preview)**
 
 4. Follow the prompts, confirm formatting if needed, and watch the real-time logs.
 5. When finished, reboot into your new system!
